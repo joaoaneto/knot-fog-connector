@@ -16,7 +16,8 @@
     "start:dev": "babel-node esm"
   },
   "dependencies": {
-    "config": "^2.0.1"
+    "config": "^2.0.1",
+    "knot": "github:cesarbr/knot-lib-node#master"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
