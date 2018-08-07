@@ -17,7 +17,8 @@
   },
   "dependencies": {
     "config": "^2.0.1",
-    "knot": "github:cesarbr/knot-lib-node#master"
+    "knot": "github:cesarbr/knot-lib-node#master",
+    "knot-fog-connector-fiware": "../knot-fog-connector-fiware/"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
