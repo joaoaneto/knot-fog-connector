@@ -1,4 +1,6 @@
 /* eslint-disable no-console */
+import _ from 'lodash';
+
 // Infrastructure
 import Settings from 'data/Settings';
 import DeviceStore from 'data/DeviceStore';
@@ -10,7 +12,8 @@ import UpdateDevices from 'interactors/UpdateDevices';
 import LoadDevices from 'interactors/LoadDevices';
 import UpdateChanges from 'interactors/UpdateChanges';
 import DevicesService from 'services/DevicesService';
-import _ from 'lodash';
+import UpdateData from 'interactors/UpdateData';
+import DataService from 'services/DataService';
 
 const settings = new Settings();
 const deviceStore = new DeviceStore();
@@ -42,13 +45,17 @@ async function main() {
     const loadDevices = new LoadDevices(deviceStore, cloud, fog);
     const updateChanges = new UpdateChanges(deviceStore, cloud);
     const devicesService = new DevicesService(updateDevices, loadDevices, updateChanges);
-
-    await devicesService.load();
+    const updateData = new UpdateData(fog);
+    const dataService = new DataService(updateData);
 
     await fog.on('config', async (device) => {
       if (_.has(device, 'id')) {
         await devicesService.updateProperties(device);
       }
+    });
+
+    await cloud.onDataUpdated(async (id, sensorId, data) => {
+      await dataService.update(id, sensorId, data);
     });
 
     setInterval(devicesService.update.bind(devicesService), 5000);
