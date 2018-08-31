@@ -112,7 +112,7 @@ async function main() {
       }
     });
 
-    setInterval(devicesService.update.bind(devicesService), 5000);
+    setInterval(devicesService.update.bind(devicesService), 200);
   } catch (err) {
     logger.error(err);
   }
