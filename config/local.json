@@ -1,0 +1,24 @@
+{
+	"fog": {
+		"host": "localhost",
+		"port": 3000,
+		"uuid": "d5cdca0b-ed64-48b3-8a33-6c0967d60000",
+		"token": "52538a398faf662a995165a3abe7d1419143489d"
+	},
+	"runAs": {
+		"user": "knot",
+		"group": "knot"
+	},
+	"log": {
+		"console": true,
+		"syslog": false,
+		"level": "info"
+    },
+    "cloudType": "KNOT_CLOUD",
+    "cloud": {
+        "hostname": "ws.knot.cloud",
+        "port": 443,
+        "uuid": "573696fe-4d01-4421-a1e5-7420cd59c229",
+        "token": "41551f84dd1f12958db10e6f7772ae74f12855dc"
+    }
+}

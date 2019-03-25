@@ -1,12 +1,34 @@
 class DevicesService {
-  constructor(updateDevicesInteractor, loadDevicesInteractor, updateChangesInteractor) {
+  constructor(
+    updateDevicesInteractor,
+    loadDevicesInteractor,
+    updateChangesInteractor,
+    registerDeviceInteractor,
+    unregisterDeviceInteractor,
+    updateSchemaInteractor,
+    ) {
     this.updateDevicesInteractor = updateDevicesInteractor;
     this.loadDevicesInteractor = loadDevicesInteractor;
     this.updateChangesInteractor = updateChangesInteractor;
+    this.registerDeviceInteractor = registerDeviceInteractor;
+    this.unregisterDeviceInteractor = unregisterDeviceInteractor;
+    this.updateSchemaInteractor = updateSchemaInteractor;
   }
 
   async update() {
     await this.updateDevicesInteractor.execute();
+  }
+
+  async register(device) {
+    await this.registerDeviceInteractor.execute(device);
+  }
+
+  async unregister(device) {
+    await this.unregisterDeviceInteractor.execute(device);
+  }
+
+  async updateSchema(device) {
+    await this.updateSchemaInteractor.execute(device);
   }
 
   async load() {

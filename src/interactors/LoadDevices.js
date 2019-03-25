@@ -7,6 +7,7 @@ class LoadDevices {
 
   async execute() {
     const devices = await this.cloudConnector.listDevices();
+    console.log(devices);
     devices.map(async (device) => {
       this.deviceStore.add(device);
       await this.fogConnector.subscribe(device.id, 'broadcast');
