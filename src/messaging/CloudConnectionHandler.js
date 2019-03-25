@@ -1,0 +1,26 @@
+class CloudConnectionHandler {
+  constructor(logger, cloud, dataService) {
+    this.logger = logger;
+    this.cloud = cloud;
+    this.dataService = dataService;
+  }
+
+  async start() {
+    this.cloud.onDataUpdated(this.onDataUpdated);
+    this.cloud.onDataRequested(this.onDataRequested);
+  }
+
+  async onDataUpdated(id, data) {
+    data.forEach(({ sensorId, value }) => {
+      this.logger.debug(`Update data from ${sensorId} of thing ${id}: ${value}`);
+    });
+    await this.dataService.update(id, data);
+  }
+
+  async onDataRequested(id, sensorIds) {
+    this.logger.debug(`Data requested from ${sensorIds} of thing ${id}`);
+    await this.dataService.request(id, sensorIds);
+  }
+}
+
+export default CloudConnectionHandler;
