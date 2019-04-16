@@ -20,7 +20,15 @@ class AMQPConnection {
     await this.channel.assertExchange(topic, 'topic', { durable: true });
     const { queue } = await this.channel.assertQueue(`${topic}-messages`, { durable: true });
     await this.channel.bindQueue(queue, topic, key);
-    await this.channel.consume(queue, callback);
+    return this.channel.consume(queue, callback);
+  }
+
+  async unbindQueue(queue, topic, key) {
+    await this.channel.unbindQueue(queue, topic, key);
+  }
+
+  async cancelConsume(consumerTag) {
+    await this.channel.cancel(consumerTag);
   }
 }
 

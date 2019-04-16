@@ -6,17 +6,40 @@ class MessageHandler {
     this.devicesService = devicesService;
     this.dataService = dataService;
     this.queue = queue;
-    this.handlers = {
+    this.handlers = this.mapMessageHandlers();
+  }
+
+  mapMessageHandlers() {
+    return {
       cloud: {
-        'device.register': this.devicesService.register.bind(this.devicesService),
-        'device.unregister': this.devicesService.unregister.bind(this.devicesService),
-        'schema.update': this.devicesService.updateSchema.bind(this.devicesService),
-        'data.publish': this.dataService.publish.bind(this.dataService),
-        'config.update': this.devicesService.updateChanges.bind(this.devicesService),
+        'device.register': {
+          method: this.devicesService.register.bind(this.devicesService),
+        },
+        'device.unregister': {
+          method: this.devicesService.unregister.bind(this.devicesService),
+        },
+        'schema.update': {
+          method: this.devicesService.updateSchema.bind(this.devicesService),
+        },
+        'data.publish': {
+          method: this.dataService.publish.bind(this.dataService),
+        },
       },
       fog: {
-        'data.update': this.dataService.update.bind(this.dataService),
-        'data.request': this.dataService.request.bind(this.dataService),
+        'data.update': {
+          method: this.dataService.update.bind(this.dataService),
+        },
+        'data.request': {
+          method: this.dataService.request.bind(this.dataService),
+        },
+      },
+      control: {
+        'disconnected': {
+          method: this.handleDisconnected.bind(this),
+        },
+        'reconnected': {
+          method: this.handleReconnected.bind(this),
+        }
       },
     };
   }
@@ -29,38 +52,54 @@ class MessageHandler {
     if (!this.handlers[type][key]) {
       throw new Error(`Unknown event type ${type}.${key}`);
     }
-    return this.handlers[type][key];
+    return this.handlers[type][key].method;
   }
 
-  async listenToQueueMessages() {
-    const types = _.keys(this.handlers);
-    types.forEach((type) => {
-      _.keys(this.handlers[type]).forEach(async (key) => {
-        // TODO: if receive disconnection stop to listen to queue
-        await this.queue.onMessage(type, key, async (msg) => {
-          const { content, fields } = msg;
-          const data = this.parseBuffer(content);
-          const { exchange, routingKey } = fields;
-          const handler = this.getHandler(exchange, routingKey);
+  handleDisconnected() {
+    console.log('handle disconnected...');
 
-          logger.debug(`Receive message ${exchange}.${routingKey}`);
-          logger.debug(JSON.stringify(data));
-          try {
-            await handler(data);
-            this.channel.ack(msg);
-          } catch (err) {
-            logger.error(err);
-            this.channel.nack(msg);
-          }
-        });
-      });
+    _.keys(this.handlers['cloud']).forEach(async (key) => {
+      await this.queue.cancelConsume(this.handlers['cloud'][key].consumerTag);
+    });
+  }
+
+  async handleReconnected() {
+    await this.listenToQueueMessages('cloud');
+  }
+
+  async handleMessage(msg) {
+    const { content, fields } = msg;
+    const data = this.parseBuffer(content);
+    const { exchange, routingKey } = fields;
+    const handler = this.getHandler(exchange, routingKey);
+
+    console.log('to aqui', exchange, routingKey);
+
+    // logger.debug(`Receive message ${exchange}.${routingKey}`);
+    // logger.debug(JSON.stringify(data));
+    try {
+      await handler(data);
+      this.channel.ack(msg);
+    } catch (err) {
+      console.log(err);
+      // logger.error(err);
+      this.channel.nack(msg);
+    }
+  }
+
+  async listenToQueueMessages(type) {
+    _.keys(this.handlers[type]).forEach(async (key) => {
+      const { consumerTag } = await this.queue.onMessage(type, key, this.handleMessage.bind(this));
+      this.handlers[type][key].consumerTag = consumerTag;
     });
   }
 
   async start() {
     await this.devicesService.load(); // this.queue.send('cloud', 'device.load', {});
     this.channel = await this.queue.start();
-    await this.listenToQueueMessages();
+    await this.listenToQueueMessages('fog');
+    await this.listenToQueueMessages('cloud');
+    await this.listenToQueueMessages('control');
   }
 }
 

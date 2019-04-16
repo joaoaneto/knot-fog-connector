@@ -13,6 +13,8 @@ import MessageHandlerFactory from 'network/MessageHandlerFactory';
 // Logger
 import logger from 'util/logger';
 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
 const settings = new SettingsFactory().create();
 const deviceStore = new DeviceStore();
 
@@ -47,7 +49,8 @@ async function main() {
     await fogConnectionHandler.start();
     await devicesPolling.start();
   } catch (err) {
-    logger.error(err);
+    console.log(err);
+    // logger.error(err);
   }
 }
 
